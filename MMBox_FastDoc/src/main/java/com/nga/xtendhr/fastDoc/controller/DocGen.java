@@ -368,7 +368,7 @@ public class DocGen {
 				docTemplateDetail.setDocTemplateId(templateId);
 				docTemplateDetail.setDescription(templateDescription);
 				docTemplateDetailsService.update(docTemplateDetail);
-				return ResponseEntity.ok().body("Template Updated successfully!!");
+				return ResponseEntity.ok().body("Success!!");
 			}
 
 			else {
@@ -382,7 +382,8 @@ public class DocGen {
 				docTemplateDetail.setName(templateName);
 				docTemplateDetail.setDescription(templateDescription);
 				docTemplateDetailsService.create(docTemplateDetail);
-				return ResponseEntity.ok().body(" Template Uploaded successfully!!");
+				return ResponseEntity.ok().body("Success!!");
+
 			}
 
 		} catch (Exception e) {
