@@ -110,7 +110,9 @@ public class CommonFunctions {
 			JSONArray responseObjectArray = responseObject.getJSONArray("d");
 
 			for (int i = 0; i < responseObjectArray.length(); i++) {
-				if (responseObjectArray.getJSONObject(i).getString("groupName").toLowerCase().contains("admin")) {
+				if (responseObjectArray.getJSONObject(i).getString("groupName").toLowerCase().contains("admin")
+						|| responseObjectArray.getJSONObject(i).getString("groupName").contains("EC HR Admin")
+						|| responseObjectArray.getJSONObject(i).getString("groupName").contains("HR Manager")) {
 					return true;
 				}
 			}
@@ -120,4 +122,3 @@ public class CommonFunctions {
 		}
 	}
 }
-
