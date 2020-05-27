@@ -108,11 +108,12 @@ public class CommonFunctions {
 			String responseJsonString = EntityUtils.toString(response.getEntity(), "UTF-8");
 			JSONObject responseObject = new JSONObject(responseJsonString);
 			JSONArray responseObjectArray = responseObject.getJSONArray("d");
-
+			String groupName;
 			for (int i = 0; i < responseObjectArray.length(); i++) {
-				if (responseObjectArray.getJSONObject(i).getString("groupName").toLowerCase().equals("admin")
-						|| responseObjectArray.getJSONObject(i).getString("groupName").equals("EC HR Admin")
-						|| responseObjectArray.getJSONObject(i).getString("groupName").equals("HR Manager")) {
+				groupName = responseObjectArray.getJSONObject(i).getString("groupName");
+				if (groupName.equals("admin")
+						|| groupName.equals("EC HR Admin")
+						|| groupName.equals("HR Manager")) {
 					return true;
 				}
 			}
