@@ -494,7 +494,20 @@ public class DocGen {
 			newRunToBeUpdated = runToBeUpdated;
 			tagString = runToBeUpdated.getText(0);
 		}
-		while (true) { // Now concatenate till '}' is found
+		while (true) {
+
+			// Checking if we have reached at the end of the runs
+			if (runs.size() - 1 == runsOperatedTill) {
+				// if yes then process as follows
+				tempText = runs.get(runsOperatedTill).getText(0);
+				tagString = tagString + tempText;
+				setRunText(tagString, newRunToBeUpdated, runs.get(runsOperatedTill - 1)); // placing tagString at the
+																							// correct run and removing
+																							// text from the another run
+				return runsOperatedTill;
+			}
+			// Now concatenate till '}' is found
+
 			runsOperatedTill++;// move to next run
 			tempText = runs.get(runsOperatedTill).getText(0);
 			if (tempText.contains("}")) {
