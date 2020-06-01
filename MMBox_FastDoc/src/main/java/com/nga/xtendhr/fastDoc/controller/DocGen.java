@@ -2179,7 +2179,7 @@ public class DocGen {
 
 	String getCurrentYear(String ruleID, HttpSession session, Boolean forDirectReport,
 			HttpServletResponse httpResponse) {
-		// Rule in DB to get the current loggedIn User
+		// Rule in DB to get the current Year
 		return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
 	}
 
