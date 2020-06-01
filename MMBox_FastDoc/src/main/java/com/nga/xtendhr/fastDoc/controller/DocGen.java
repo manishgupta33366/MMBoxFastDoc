@@ -2177,6 +2177,12 @@ public class DocGen {
 		}
 	}
 
+	String getCurrentYear(String ruleID, HttpSession session, Boolean forDirectReport,
+			HttpServletResponse httpResponse) {
+		// Rule in DB to get the current loggedIn User
+		return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+	}
+
 	String getLoggedInUser(String ruleID, HttpSession session, Boolean forDirectReport,
 			HttpServletResponse httpResponse) {
 		// Rule in DB to get the current loggedIn User
@@ -3268,7 +3274,7 @@ public class DocGen {
 					continue;
 				// else add the value to the post object
 				objToPlace = new JSONObject();
-				objToPlace.put("tag", tempTemplateFieldTag.getId() + 0 + counter++);
+				objToPlace.put("tag", tempTemplateFieldTag.getId().replace("}", counter++ + "}"));
 				objToPlace.put("value", fieldValue);
 				tagsArray.put(objToPlace);
 			}
