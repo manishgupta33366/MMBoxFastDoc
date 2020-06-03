@@ -2188,6 +2188,16 @@ public class DocGen {
 		// Rule in DB to get the current loggedIn User
 		return (String) session.getAttribute("loggedInUser");
 	}
+
+	String getLoggedInUserName(String ruleID, HttpSession session, Boolean forDirectReport,
+			HttpServletResponse httpResponse) throws BatchException, ClientProtocolException,
+			UnsupportedOperationException, NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NamingException, URISyntaxException, IOException {
+		// Rule in DB to get the current loggedIn User FirstName and LastName
+		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
+		return getFieldValue(mapRuleField.get(0).getField(), session, false, null, httpResponse)
+				+ getFieldValue(mapRuleField.get(1).getField(), session, false, null, httpResponse);
+	}
 	/*
 	 *** GET Rules END***
 	 */
