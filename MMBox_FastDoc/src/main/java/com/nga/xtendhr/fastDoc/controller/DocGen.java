@@ -490,9 +490,11 @@ public class DocGen {
 		if (runToBeUpdated == null) {
 			newRunToBeUpdated = runs.get(runsOperatedTill);// save the run in temp
 			tagString = runs.get(runsOperatedTill).getText(0);
+			tagString = tagString == null ? "" : tagString;
 		} else {
 			newRunToBeUpdated = runToBeUpdated;
 			tagString = runToBeUpdated.getText(0);
+			tagString = tagString == null ? "" : tagString;
 		}
 		while (true) {
 
@@ -500,6 +502,7 @@ public class DocGen {
 			if (runs.size() - 1 == runsOperatedTill) {
 				// if yes then process as follows
 				tempText = runs.get(runsOperatedTill).getText(0);
+				tempText = tempText == null ? "" : tempText;
 				tagString = tagString + tempText;
 				setRunText(tagString, newRunToBeUpdated, runs.get(runsOperatedTill - 1)); // placing tagString at the
 																							// correct run and removing
@@ -510,34 +513,44 @@ public class DocGen {
 
 			runsOperatedTill++;// move to next run
 			tempText = runs.get(runsOperatedTill).getText(0);
-			if (tempText.contains("}")) {
-				// Now Checking if a new tag is started
+			tempText = tempText == null ? "" : tempText;
+			try {
+				if (tempText.contains("}")) {
+					// Now Checking if a new tag is started
 
-				isTag = checkIfItsATAG(runs, runsOperatedTill, newRunToBeUpdated);
-				if (isTag.getBoolean("isCase")) {
-					runsOperatedTill = isTag.getInt("runsOperatedTill");
-					tagString = tagString + tempText; // copy text to tagString
-					System.out.println("inside case found:: tagString set: " + tagString);
-					setRunText(tagString, newRunToBeUpdated, runs.get(runsOperatedTill)); // placing tagString at the
-																							// correct run and removing
-																							// text from the another run
-					if (runsOperatedTill == runs.size() - 1) { // return if last run as it will be already complete tag
-						return runsOperatedTill;
+					isTag = checkIfItsATAG(runs, runsOperatedTill, newRunToBeUpdated);
+					if (isTag.getBoolean("isCase")) {
+						runsOperatedTill = isTag.getInt("runsOperatedTill");
+						tagString = tagString + tempText; // copy text to tagString
+						System.out.println("inside case found:: tagString set: " + tagString);
+						setRunText(tagString, newRunToBeUpdated, runs.get(runsOperatedTill)); // placing tagString at
+																								// the
+																								// correct run and
+																								// removing
+																								// text from the another
+																								// run
+						if (runsOperatedTill == runs.size() - 1) { // return if last run as it will be already complete
+																	// tag
+							return runsOperatedTill;
+						}
+						return performRunOperations(runs, runsOperatedTill, newRunToBeUpdated);
 					}
-					return performRunOperations(runs, runsOperatedTill, newRunToBeUpdated);
-				}
 
+					tagString = tagString + tempText; // copy text to tagString
+					System.out.println("Found Closing Brace, text set: " + tagString);
+					setRunText(tagString, newRunToBeUpdated, runs.get(runsOperatedTill)); // placing tagString at
+																							// the correct run and
+																							// removing text from
+																							// the another run
+					return (runsOperatedTill);// return till when runs are operated
+				}
+				System.out.println("tagString:*** " + tagString);
 				tagString = tagString + tempText; // copy text to tagString
-				System.out.println("Found Closing Brace, text set: " + tagString);
-				setRunText(tagString, newRunToBeUpdated, runs.get(runsOperatedTill)); // placing tagString at
-																						// the correct run and
-																						// removing text from
-																						// the another run
-				return (runsOperatedTill);// return till when runs are operated
+				runs.get(runsOperatedTill).setText("", 0); // remove text from run
+			} catch (Exception e) {
+				System.out.print("Inside Catch Message Got: " + e.getMessage());
+				performRunOperations(runs, runsOperatedTill, runToBeUpdated);
 			}
-			System.out.println("tagString:*** " + tagString);
-			tagString = tagString + tempText; // copy text to tagString
-			runs.get(runsOperatedTill).setText("", 0); // remove text from run
 		}
 	}
 
@@ -560,6 +573,7 @@ public class DocGen {
 		int tempRunsOperatedTillForCase2 = runsOperatedTill;
 
 		String tempText = runs.get(runsOperatedTill).getText(0);
+		tempText = tempText == null ? "" : tempText;
 		JSONObject responseObj = new JSONObject();
 		if (tempText.lastIndexOf("@") != -1 && (tempText.length() == tempText.lastIndexOf("@") + 1)) { // '@' should be
 																										// at the last
@@ -601,6 +615,7 @@ public class DocGen {
 
 	private int checkIfTextIsNull(List<XWPFRun> runs, int runsOperatedTill, XWPFRun runToBeUpdated) {
 		String tempText = runs.get(runsOperatedTill).getText(0);
+		tempText = tempText == null ? "" : tempText;
 		if (tempText.length() == 0) {
 			runsOperatedTill++;
 			return checkIfTextIsNull(runs, runsOperatedTill, runToBeUpdated); // recurse if its null
