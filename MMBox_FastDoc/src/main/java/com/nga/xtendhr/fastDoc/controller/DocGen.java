@@ -1776,10 +1776,12 @@ public class DocGen {
 		String countryID = ruleData.getString(mapRuleField.get(0).getField().getTechnicalName());
 		String companyID = ruleData.getString(mapRuleField.get(1).getField().getTechnicalName());
 		Boolean isManager = Boolean.parseBoolean(ruleData.getString(mapRuleField.get(2).getField().getTechnicalName()));
+
 		Iterator<MapCountryCompanyGroup> iterator = mapCountryCompanyGroupService
 				.findByCountryCompany(countryID, companyID, false).iterator();
 		JSONArray response = new JSONArray();
 		String locale = (String) session.getAttribute("locale");
+		logger.debug("Country: " + countryID + ":::Company: " + companyID + ":::Locale: " + locale);
 		MapCountryCompanyGroup tempMapCountryCompanyGroup;
 		List<Text> tempTextList;
 		JSONObject tempMapCountryCompanyGroupObj;
