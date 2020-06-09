@@ -1350,9 +1350,10 @@ public class DocGen {
 
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
 		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, false, null, httpResponse);
+		String ccTo = getFieldValue(mapRuleField.get(3).getField(), session, false, null, httpResponse);
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo);
+		sendEmail(doc, inPDF, sendTo, ccTo);
 		return "Success!!";
 	}
 
@@ -1460,9 +1461,10 @@ public class DocGen {
 		Boolean inPDF = requestData.getBoolean("inPDF");
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
 		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, false, null, httpResponse);
+		String ccTo = getFieldValue(mapRuleField.get(3).getField(), session, false, null, httpResponse);
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo);
+		sendEmail(doc, inPDF, sendTo, ccTo);
 
 		return "Success!!";
 	}
@@ -2591,9 +2593,10 @@ public class DocGen {
 
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
 		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, false, null, httpResponse);
+		String ccTo = getFieldValue(mapRuleField.get(3).getField(), session, false, null, httpResponse);
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo);
+		sendEmail(doc, inPDF, sendTo, ccTo);
 		return "Success!!";
 	}
 
@@ -2728,9 +2731,11 @@ public class DocGen {
 		replaceTags(doc, docRequestObject.getJSONArray("tagsArray")); // Replace Tags in the doc
 
 		String sendTo = getFieldValue(mapRuleField.get(4).getField(), session, false, null, httpResponse);
+		String ccTo = getFieldValue(mapRuleField.get(5).getField(), session, false, null, httpResponse);
+
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo);
+		sendEmail(doc, inPDF, sendTo, ccTo);
 		return "Success!!";
 	}
 	/*
@@ -3639,7 +3644,7 @@ public class DocGen {
 		return w;
 	}
 
-	private String sendEmail(XWPFDocument doc, boolean inPDF, String sendTo)
+	private String sendEmail(XWPFDocument doc, boolean inPDF, String sendTo, String ccTo)
 			throws AddressException, MessagingException, IOException, NamingException {
 
 		DestinationClient javaDestClient = CommonFunctions.getDestinationCLient(CommonVariables.GMAIL_ACCOUNT);
@@ -3667,6 +3672,7 @@ public class DocGen {
 		 */
 
 		message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(sendTo));
+		message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(ccTo));
 
 		message.setSubject("Testing Gmail SSL");
 		message.setText("," + "\n\n Test email!");
