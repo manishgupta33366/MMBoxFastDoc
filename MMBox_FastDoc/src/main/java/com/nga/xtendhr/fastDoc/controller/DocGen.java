@@ -84,6 +84,7 @@ import com.nga.xtendhr.fastDoc.model.DocTemplates;
 import com.nga.xtendhr.fastDoc.model.Entities;
 import com.nga.xtendhr.fastDoc.model.Fields;
 import com.nga.xtendhr.fastDoc.model.FormatSeparators;
+import com.nga.xtendhr.fastDoc.model.Groups;
 import com.nga.xtendhr.fastDoc.model.MapCountryCompanyGroup;
 import com.nga.xtendhr.fastDoc.model.MapGroupTemplates;
 import com.nga.xtendhr.fastDoc.model.MapRuleFields;
@@ -102,6 +103,7 @@ import com.nga.xtendhr.fastDoc.service.DocTemplatesService;
 import com.nga.xtendhr.fastDoc.service.EntitiesService;
 import com.nga.xtendhr.fastDoc.service.FieldsService;
 import com.nga.xtendhr.fastDoc.service.FormatSeparatorsService;
+import com.nga.xtendhr.fastDoc.service.GroupsService;
 import com.nga.xtendhr.fastDoc.service.MapCountryCompanyGroupService;
 import com.nga.xtendhr.fastDoc.service.MapGroupTemplatesService;
 import com.nga.xtendhr.fastDoc.service.MapRuleFieldsService;
@@ -188,20 +190,28 @@ public class DocGen {
 	@Autowired
 	DocTemplateDetailsService docTemplateDetailsService;
 
+	@Autowired
+	GroupsService groupsService;
+
 	@PostMapping(value = "/downloadDocTemplate") // new/efficient code to download template
 	public void downloadDocTemplate(@RequestParam(name = "templateId") String templateId,
 			@RequestParam(name = "inPDF") Boolean inPDF, @RequestBody String requestData, HttpServletRequest request,
-			HttpServletResponse response) {
+			HttpServletResponse response,
+			@RequestParam(name = "templateWithoutProcerssing", required = false) Boolean templateWithoutProcerssing) {
 		try {
-			JSONArray requestTagsArray = new JSONObject(requestData).getJSONArray("tagsArray");
+
 			DocTemplates docTemplate = docTemplatesService.findById(templateId).get(0);// Template saved in DB
+
 			InputStream inputStream = new ByteArrayInputStream(docTemplate.getTemplate()); // creating input-stream
 																							// from
 																							// template to create docx
 																							// file
 			XWPFDocument doc = new XWPFDocument(inputStream);
 
-			replaceTags(doc, requestTagsArray); // Replace Tags in the doc
+			if (templateWithoutProcerssing != true) { // Download template directly from Database
+				JSONArray requestTagsArray = new JSONObject(requestData).getJSONArray("tagsArray");
+				replaceTags(doc, requestTagsArray); // Replace Tags in the doc
+			}
 
 			Random random = new Random(); // to generate a random fileName
 			int randomNumber = random.nextInt(987656554);
@@ -339,7 +349,8 @@ public class DocGen {
 	@RequestMapping(value = "/uploadDocTemplate", method = RequestMethod.POST) // new/efficient code to upload template
 	public ResponseEntity<?> uploadDocTemplate(@RequestParam(name = "templateName") String templateName,
 			@RequestParam(name = "templateDescription") String templateDescription,
-			@RequestParam("file") MultipartFile multipartFile, HttpSession session) throws IOException {
+			@RequestParam(name = "groupId") String groupId, @RequestParam("file") MultipartFile multipartFile,
+			HttpSession session) throws IOException {
 		try {
 
 			XWPFDocument document = new XWPFDocument(multipartFile.getInputStream());
@@ -354,37 +365,126 @@ public class DocGen {
 																							// generated from
 																							// fileOutputStream
 
-			List<DocTemplateDetails> docTemplateDetailChek = docTemplateDetailsService.findByName(templateName);
+			// Uploading Template and its details
+
 			DocTemplateDetails docTemplateDetail;
-			if (docTemplateDetailChek.size() > 0) {
-				docTemplateDetail = docTemplateDetailChek.get(0);
-				DocTemplates docTemplate = new DocTemplates();
-				String templateId = docTemplateDetail.getDocTemplateId();
-				docTemplate.setId(templateId);
-				docTemplate.setTemplate(encoded);
-				docTemplatesService.update(docTemplate);
+			String templateId = String.valueOf(randomNumber);
+			DocTemplates docTemplate = new DocTemplates();
+			docTemplate.setId(templateId);
+			docTemplate.setTemplate(encoded);
+			docTemplatesService.create(docTemplate);
 
-				docTemplateDetail = new DocTemplateDetails();
-				docTemplateDetail.setDocTemplateId(templateId);
-				docTemplateDetail.setDescription(templateDescription);
-				docTemplateDetailsService.update(docTemplateDetail);
-				return ResponseEntity.ok().body("Success!!");
+			docTemplateDetail = new DocTemplateDetails();
+			docTemplateDetail.setDocTemplateId(templateId);
+			docTemplateDetail.setName(templateName);
+			docTemplateDetail.setDescription(templateDescription);
+			docTemplateDetailsService.create(docTemplateDetail);
+
+			// Creating Template Entries in Configuration tables
+			Templates template = new Templates();
+			template.setId(templateId);
+			template.setDisplayName(templateName);
+			template.setName(templateName);
+			template.setDescription(templateDescription);
+			templateService.create(template);
+
+			// Mapping Group to Template
+			MapGroupTemplates mapGroupTemplates = new MapGroupTemplates();
+			mapGroupTemplates.setGroupID(groupId);
+			mapGroupTemplates.setTemplateID(templateId);
+			mapGroupTemplateService.create(mapGroupTemplates);
+
+			// Mapping field to Template using DEFAULT_TEMPLATE
+			Iterator<MapTemplateFields> iterator = mapTemplateFieldsService.findByTemplateID("DEFAULT_TEMPLATE")
+					.iterator();
+			MapTemplateFields mapTemplateField;
+			MapTemplateFields tempMapTemplateField;
+			while (iterator.hasNext()) {
+				mapTemplateField = iterator.next();
+				tempMapTemplateField = new MapTemplateFields();
+				tempMapTemplateField.setTemplateID(templateId);
+				tempMapTemplateField.setTemplateFieldTagId(mapTemplateField.getTemplateFieldTagId());
+				mapTemplateFieldsService.create(tempMapTemplateField);
 			}
 
-			else {
-				DocTemplates docTemplate = new DocTemplates();
-				docTemplate.setId(String.valueOf(randomNumber));
-				docTemplate.setTemplate(encoded);
-				docTemplatesService.create(docTemplate);
+			return ResponseEntity.ok().body("Success!!");
 
-				docTemplateDetail = new DocTemplateDetails();
-				docTemplateDetail.setDocTemplateId(String.valueOf(randomNumber));
-				docTemplateDetail.setName(templateName);
-				docTemplateDetail.setDescription(templateDescription);
-				docTemplateDetailsService.create(docTemplateDetail);
-				return ResponseEntity.ok().body("Success!!");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Error!", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 
-			}
+	@PostMapping(value = "/createGroup")
+	public ResponseEntity<?> createGroup(HttpServletRequest request, HttpServletResponse response,
+			@RequestBody String requestData) {
+		try {
+			JSONObject groupData = new JSONObject(requestData);
+
+			// Creating Group
+			Groups group = new Groups();
+			Random random = new Random(); // to generate a random fileName
+			int randomNumber = random.nextInt(987656554);
+			group.setId(String.valueOf(randomNumber));
+			group.setName(groupData.getString("name"));
+			group.setDescription(groupData.getString("description"));
+			groupsService.create(group);
+
+			// Creating mapCountryCompanyGroupService entry
+			SimpleDateFormat sdf_MMDDYYY = new SimpleDateFormat("yyyy-MM-dd");
+
+			MapCountryCompanyGroup mapCountryCompanyGroup = new MapCountryCompanyGroup();
+			mapCountryCompanyGroup.setCompanyID(groupData.getString("companyID"));
+			mapCountryCompanyGroup.setCountryID(groupData.getString("countryID"));
+			mapCountryCompanyGroup.setGroupID(String.valueOf(randomNumber));
+			mapCountryCompanyGroup.setIsActive(true);
+			mapCountryCompanyGroup.setShowOnUI(true);
+			mapCountryCompanyGroup.setIsEssRelevant(groupData.getBoolean("isEssRelevant"));
+			mapCountryCompanyGroup.setIsMssRelevant(groupData.getBoolean("isMssRelevant"));
+			mapCountryCompanyGroup.setStartDate(sdf_MMDDYYY.parse(groupData.getString("startDate")));
+			mapCountryCompanyGroup.setEndDate(sdf_MMDDYYY.parse(groupData.getString("endDate")));
+			mapCountryCompanyGroupService.create(mapCountryCompanyGroup);
+			JSONObject responseGroup = new JSONObject();
+			responseGroup.put("groups", new JSONObject().put("data", groupsService.findAll()));
+			responseGroup.put("newGroup",
+					mapCountryCompanyGroupService.findByGroup(mapCountryCompanyGroup.getGroupID()));
+			return ResponseEntity.ok().body(responseGroup.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Error!", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@RequestMapping(value = "/editTemplate", method = RequestMethod.POST) // new/efficient code to upload template
+	public ResponseEntity<?> editTemplate(@RequestParam(name = "templateId") String templateId,
+			@RequestParam(name = "templateName") String templateName,
+			@RequestParam(name = "templateDescription") String templateDescription,
+			@RequestParam("file") MultipartFile multipartFile, HttpSession session) throws IOException {
+		try {
+
+			XWPFDocument document = new XWPFDocument(multipartFile.getInputStream());
+			startProcessingWordFile(document);
+
+			Random random = new Random(); // to generate a random fileName
+			int randomNumber = random.nextInt(987656554);
+			FileOutputStream fileOutputStream = new FileOutputStream("GeneratedDoc_" + randomNumber); // Temp location
+
+			document.write(fileOutputStream);// writing the updated Template to FileOutputStream // to save file
+			byte[] encoded = Files.readAllBytes(Paths.get("GeneratedDoc_" + randomNumber)); // reading the file
+																							// generated from
+																							// fileOutputStream
+			DocTemplateDetails docTemplateDetail;
+			DocTemplates docTemplate = new DocTemplates();
+			docTemplate.setId(templateId);
+			docTemplate.setTemplate(encoded);
+			docTemplatesService.update(docTemplate);
+
+			docTemplateDetail = new DocTemplateDetails();
+			docTemplateDetail.setDocTemplateId(templateId);
+			docTemplateDetail.setName(templateName);
+			docTemplateDetail.setDescription(templateDescription);
+			docTemplateDetailsService.update(docTemplateDetail);
+			return ResponseEntity.ok().body("Success!!");
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -629,8 +729,8 @@ public class DocGen {
 			HttpSession session = request.getSession(false);
 			String loggedInUser = request.getUserPrincipal().getName();
 			loggedInUser = loggedInUser.equals("S0014379281") || loggedInUser.equals("S0018269301")
-					|| loggedInUser.equals("S0019013022") || loggedInUser.equals("S0020227452") ? "E00000815"
-							: loggedInUser;
+					|| loggedInUser.equals("S0019013022") || loggedInUser.equals("S0020227452")
+					|| loggedInUser.equals("S0021831184") ? "E00000815" : loggedInUser;
 //			if (session != null) {
 //				session.invalidate();
 //			}
@@ -647,6 +747,16 @@ public class DocGen {
 			session.setAttribute("locale", getLocale(session, httpResponse));
 			return ResponseEntity.ok().body(response.toString());// True to create a new session for the logged-in user
 																	// as its the initial call
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Error!", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@GetMapping(value = "/getGroupDetails")
+	public ResponseEntity<?> getGroupDetails(@RequestParam(name = "groupId") String groupId) {
+		try {
+			return ResponseEntity.ok().body(mapCountryCompanyGroupService.findByGroup(groupId));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>("Error!", HttpStatus.INTERNAL_SERVER_ERROR);

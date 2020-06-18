@@ -34,7 +34,8 @@ import com.nga.xtendhr.fastDoc.config.DBConfiguration;
 		@NamedQuery(name = "MapCountryCompanyGroup.findByGroupCountryCompany_Employee", query = "SELECT MCCG FROM MapCountryCompanyGroup MCCG WHERE MCCG.groupID = :groupID AND MCCG.countryID = :countryID AND MCCG.companyID = :companyID AND MCCG.isEssRelevant = :isEssRelevant  and MCCG.isActive = :isActive and MCCG.showOnUI = :showOnUI"),
 		@NamedQuery(name = "MapCountryCompanyGroup.findByCountryCompany_Admin", query = "SELECT MCCG FROM MapCountryCompanyGroup MCCG WHERE MCCG.countryID = :countryID AND MCCG.companyID = :companyID  and MCCG.isActive = :isActive and MCCG.showOnUI = :showOnUI"),
 		@NamedQuery(name = "MapCountryCompanyGroup.findByGroupCountryCompany_Admin", query = "SELECT MCCG FROM MapCountryCompanyGroup MCCG WHERE MCCG.groupID = :groupID AND MCCG.countryID = :countryID AND MCCG.companyID = :companyID and MCCG.isActive = :isActive and MCCG.showOnUI = :showOnUI"),
-		@NamedQuery(name = "MapCountryCompanyGroup.findByCountry", query = "SELECT MCCG FROM MapCountryCompanyGroup MCCG WHERE MCCG.countryID = :countryID and MCCG.isActive = :isActive and MCCG.showOnUI = :showOnUI") })
+		@NamedQuery(name = "MapCountryCompanyGroup.findByCountry", query = "SELECT MCCG FROM MapCountryCompanyGroup MCCG WHERE MCCG.countryID = :countryID and MCCG.isActive = :isActive and MCCG.showOnUI = :showOnUI"),
+		@NamedQuery(name = "MapCountryCompanyGroup.findByGroup", query = "SELECT MCCG FROM MapCountryCompanyGroup MCCG WHERE MCCG.groupID = :groupID") })
 
 public class MapCountryCompanyGroup {
 	@Id
@@ -74,6 +75,10 @@ public class MapCountryCompanyGroup {
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "\"COMPANY.ID\"", referencedColumnName = "\"ID\"", insertable = false, updatable = false)
 	private Companies company;
+
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "\"COUNTRY.ID\"", referencedColumnName = "\"ID\"", insertable = false, updatable = false)
+	private Countries country;
 
 	public String getCountryID() {
 		return countryID;
@@ -161,6 +166,14 @@ public class MapCountryCompanyGroup {
 
 	public void setCompany(Companies company) {
 		this.company = company;
+	}
+
+	public Countries getCountry() {
+		return country;
+	}
+
+	public void setCountry(Countries country) {
+		this.country = country;
 	}
 
 	public String toString() {// overriding the toString() method

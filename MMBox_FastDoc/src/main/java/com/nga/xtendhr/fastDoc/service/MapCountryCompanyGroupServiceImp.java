@@ -114,4 +114,14 @@ public class MapCountryCompanyGroupServiceImp implements MapCountryCompanyGroupS
 		return items;
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<MapCountryCompanyGroup> findByGroup(String groupId) {
+		Query query;
+		List<MapCountryCompanyGroup> items;
+		query = em.createNamedQuery("MapCountryCompanyGroup.findByGroup").setParameter("groupID", groupId);
+		items = query.getResultList();
+		return items;
+	}
+
 }

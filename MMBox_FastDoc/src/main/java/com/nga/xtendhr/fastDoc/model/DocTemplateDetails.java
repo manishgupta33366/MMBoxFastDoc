@@ -1,10 +1,15 @@
 package com.nga.xtendhr.fastDoc.model;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.nga.xtendhr.fastDoc.config.DBConfiguration;
@@ -33,6 +38,13 @@ public class DocTemplateDetails {
 
 	@Column(name = "\"DESCRIPTION\"", columnDefinition = "VARCHAR(64)")
 	private String description;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "docTemplateDetails", targetEntity = MapGroupTemplates.class, fetch = FetchType.LAZY)
+	private List<MapGroupTemplates> mapGroupTemplates;
+
+	public List<MapGroupTemplates> getMapGroupTemplates() {
+		return mapGroupTemplates;
+	}
 
 	public String getDocTemplateId() {
 		return docTemplateId;

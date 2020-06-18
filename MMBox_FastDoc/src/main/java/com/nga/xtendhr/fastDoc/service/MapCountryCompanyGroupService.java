@@ -23,4 +23,5 @@ public interface MapCountryCompanyGroupService {
 
 	public List<MapCountryCompanyGroup> findByGroupCountryCompany(String groupID, String countryID, String companyID);
 
+	public List<MapCountryCompanyGroup> findByGroup(String groupId);
 }

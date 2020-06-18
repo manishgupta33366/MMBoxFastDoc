@@ -39,6 +39,22 @@ public class MapGroupTemplates {
 	@JoinColumn(name = "\"TEMPLATE.ID\"", referencedColumnName = "\"ID\"", insertable = false, updatable = false)
 	private Templates template;
 
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "\"GRP.ID\"", referencedColumnName = "\"ID\"", insertable = false, updatable = false)
+	private Groups group;
+
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "\"TEMPLATE.ID\"", referencedColumnName = "\"DOC_TEMPLATE.ID\"", insertable = false, updatable = false)
+	private DocTemplateDetails docTemplateDetails;
+
+	public Groups getGroup() {
+		return group;
+	}
+
+	public void setGroup(Groups group) {
+		this.group = group;
+	}
+
 	public String getGroupID() {
 		return groupID;
 	}
