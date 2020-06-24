@@ -14,4 +14,6 @@ public interface DocTemplateDetailsService {
 	public List<DocTemplateDetails> findAll();
 
 	public List<DocTemplateDetails> findByName(String name);
+
+	public List<DocTemplateDetails> findById(String id);
 }

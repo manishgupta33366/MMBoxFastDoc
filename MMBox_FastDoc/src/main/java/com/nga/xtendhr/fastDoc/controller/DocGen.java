@@ -112,6 +112,7 @@ import com.nga.xtendhr.fastDoc.service.MapTemplateFieldsService;
 import com.nga.xtendhr.fastDoc.service.RulesService;
 import com.nga.xtendhr.fastDoc.service.SFDataMappingService;
 import com.nga.xtendhr.fastDoc.service.TemplateFastDocService;
+import com.nga.xtendhr.fastDoc.service.TemplateFieldTagService;
 import com.nga.xtendhr.fastDoc.service.TemplateTestService;
 import com.nga.xtendhr.fastDoc.service.TextService;
 import com.nga.xtendhr.fastDoc.utility.CommonFunctions;
@@ -192,6 +193,9 @@ public class DocGen {
 
 	@Autowired
 	GroupsService groupsService;
+
+	@Autowired
+	TemplateFieldTagService templateFieldTagService;
 
 	@PostMapping(value = "/downloadDocTemplate") // new/efficient code to download template
 	public void downloadDocTemplate(@RequestParam(name = "templateId") String templateId,
@@ -757,6 +761,16 @@ public class DocGen {
 	public ResponseEntity<?> getGroupDetails(@RequestParam(name = "groupId") String groupId) {
 		try {
 			return ResponseEntity.ok().body(mapCountryCompanyGroupService.findByGroup(groupId));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Error!", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@GetMapping(value = "/getTagDetails")
+	public ResponseEntity<?> getTagDetails() {
+		try {
+			return ResponseEntity.ok().body(templateFieldTagService.findAll());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>("Error!", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -1459,11 +1473,16 @@ public class DocGen {
 		replaceTags(doc, docRequestObject.getJSONArray("tagsArray")); // Replace Tags in the doc
 
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
-		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, false, null, httpResponse);
+		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, true, null, httpResponse);
 		String ccTo = getFieldValue(mapRuleField.get(3).getField(), session, false, null, httpResponse);
+
+		DocTemplateDetails docTemplateDetails = docTemplateDetailsService.findById(templateID).get(0);
+		String mailSubject = "NGA Fast Doc - " + docTemplateDetails.getDescription();
+		String mailBody = getFieldValue(mapRuleField.get(4).getField(), session, false, null, httpResponse);
+
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo, ccTo);
+		sendEmail(doc, inPDF, sendTo, ccTo, mailSubject, mailBody);
 		return "Success!!";
 	}
 
@@ -1560,6 +1579,7 @@ public class DocGen {
 		DocTemplates docTemplate = docTemplatesService.findById(templateID).get(0);// Template
 																					// saved in
 																					// DB
+
 		InputStream inputStream = new ByteArrayInputStream(docTemplate.getTemplate()); // creating input-stream
 																						// from
 																						// template to create docx
@@ -1572,9 +1592,13 @@ public class DocGen {
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
 		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, false, null, httpResponse);
 		String ccTo = getFieldValue(mapRuleField.get(3).getField(), session, false, null, httpResponse);
+
+		DocTemplateDetails docTemplateDetails = docTemplateDetailsService.findById(templateID).get(0);
+		String mailSubject = "NGA Fast Doc - " + docTemplateDetails.getDescription();
+		String mailBody = getFieldValue(mapRuleField.get(4).getField(), session, false, null, httpResponse);
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo, ccTo);
+		sendEmail(doc, inPDF, sendTo, ccTo, mailSubject, mailBody);
 
 		return "Success!!";
 	}
@@ -2324,8 +2348,26 @@ public class DocGen {
 			IllegalArgumentException, InvocationTargetException, NamingException, URISyntaxException, IOException {
 		// Rule in DB to get the current loggedIn User FirstName and LastName
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
-		return getFieldValue(mapRuleField.get(0).getField(), session, false, null, httpResponse)
+		return getFieldValue(mapRuleField.get(0).getField(), session, false, null, httpResponse) + " "
 				+ getFieldValue(mapRuleField.get(1).getField(), session, false, null, httpResponse);
+	}
+
+	String getLoggedInUserTitle(String ruleID, HttpSession session, Boolean forDirectReport,
+			HttpServletResponse httpResponse) throws BatchException, ClientProtocolException,
+			UnsupportedOperationException, NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NamingException, URISyntaxException, IOException {
+		// Rule in DB to get the current loggedIn User FirstName and LastName
+		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
+		return getFieldValue(mapRuleField.get(0).getField(), session, false, null, httpResponse);
+	}
+
+	String getLoggedInUserEmail(String ruleID, HttpSession session, Boolean forDirectReport,
+			HttpServletResponse httpResponse) throws BatchException, ClientProtocolException,
+			UnsupportedOperationException, NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NamingException, URISyntaxException, IOException {
+		// Rule in DB to get the current loggedIn User FirstName and LastName
+		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
+		return getFieldValue(mapRuleField.get(0).getField(), session, false, null, httpResponse);
 	}
 	/*
 	 *** GET Rules END***
@@ -2704,9 +2746,13 @@ public class DocGen {
 		List<MapRuleFields> mapRuleField = mapRuleFieldsService.findByRuleID(ruleID);
 		String sendTo = getFieldValue(mapRuleField.get(2).getField(), session, false, null, httpResponse);
 		String ccTo = getFieldValue(mapRuleField.get(3).getField(), session, false, null, httpResponse);
+
+		DocTemplateDetails docTemplateDetails = docTemplateDetailsService.findById(templateID).get(0);
+		String mailSubject = "NGA Fast Doc - " + docTemplateDetails.getDescription();
+		String mailBody = getFieldValue(mapRuleField.get(4).getField(), session, false, null, httpResponse);
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo, ccTo);
+		sendEmail(doc, inPDF, sendTo, ccTo, mailSubject, mailBody);
 		return "Success!!";
 	}
 
@@ -2840,12 +2886,16 @@ public class DocGen {
 
 		replaceTags(doc, docRequestObject.getJSONArray("tagsArray")); // Replace Tags in the doc
 
-		String sendTo = getFieldValue(mapRuleField.get(4).getField(), session, false, null, httpResponse);
+		String sendTo = getFieldValue(mapRuleField.get(4).getField(), session, true, null, httpResponse);
 		String ccTo = getFieldValue(mapRuleField.get(5).getField(), session, false, null, httpResponse);
+
+		DocTemplateDetails docTemplateDetails = docTemplateDetailsService.findById(templateID).get(0);
+		String mailSubject = "NGA Fast Doc - " + docTemplateDetails.getDescription();
+		String mailBody = getFieldValue(mapRuleField.get(6).getField(), session, false, null, httpResponse);
 
 		if (sendTo.equals(""))
 			return "Error No Email adderss found in DB";
-		sendEmail(doc, inPDF, sendTo, ccTo);
+		sendEmail(doc, inPDF, sendTo, ccTo, mailSubject, mailBody);
 		return "Success!!";
 	}
 	/*
@@ -3408,17 +3458,28 @@ public class DocGen {
 			countrySpecificFieldsItr = countrySpecificFieldsService
 					.findByTypeAndCountry(tempTemplateFieldTag.getType(), country).iterator();
 			int counter = 1;
+			int numberOfSkippedTags = 0;
 			while (countrySpecificFieldsItr.hasNext()) {
 				fieldValue = getFieldValue(countrySpecificFieldsItr.next().getField(), session, forDirectReport,
 						tempTemplateFieldTag.getType(), httpResponse);
 				logger.debug("fieldValue::: " + fieldValue);
 				if (fieldValue.equals("")) // Continue if "" and move to next field mapped to the type if any ;D
+				{
+					numberOfSkippedTags++;
 					continue;
+				}
 				// else add the value to the post object
 				objToPlace = new JSONObject();
 				objToPlace.put("tag", tempTemplateFieldTag.getId().replace("}", counter++ + "}"));
 				objToPlace.put("value", fieldValue);
 				tagsArray.put(objToPlace);
+			}
+			while (numberOfSkippedTags > 0) { // place "" on skipped tags
+				objToPlace = new JSONObject();
+				objToPlace.put("tag", tempTemplateFieldTag.getId().replace("}", counter++ + "}"));
+				objToPlace.put("value", "");
+				tagsArray.put(objToPlace);
+				numberOfSkippedTags--;
 			}
 		}
 		return tagsArray;
@@ -3754,8 +3815,8 @@ public class DocGen {
 		return w;
 	}
 
-	private String sendEmail(XWPFDocument doc, boolean inPDF, String sendTo, String ccTo)
-			throws AddressException, MessagingException, IOException, NamingException {
+	private String sendEmail(XWPFDocument doc, boolean inPDF, String sendTo, String ccTo, String mailSubject,
+			String mailBody) throws AddressException, MessagingException, IOException, NamingException {
 
 		DestinationClient javaDestClient = CommonFunctions.getDestinationCLient(CommonVariables.GMAIL_ACCOUNT);
 		Properties prop = new Properties();
@@ -3784,27 +3845,27 @@ public class DocGen {
 		message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(sendTo));
 		message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(ccTo));
 
-		message.setSubject("Testing Gmail SSL");
-		message.setText("," + "\n\n Test email!");
+		message.setSubject(mailSubject);
+		message.setText("," + "\n\n " + mailBody);
 
 		File file;
 		Random random = new Random(); // to generate a random fileName
 		int randomNumber = random.nextInt(987656554);
 
 		if (!inPDF) {
-			FileOutputStream fileOutputStream = new FileOutputStream("GeneratedDoc_" + randomNumber + ".docx"); // Temp
-																												// location
+			FileOutputStream fileOutputStream = new FileOutputStream(mailSubject + randomNumber + ".docx"); // Temp
+																											// location
 			doc.write(fileOutputStream);// writing the updated Template to FileOutputStream // to save file
-			file = new File(Paths.get("GeneratedDoc_" + randomNumber + ".docx").toString()); // reading the file
+			file = new File(Paths.get(mailSubject + randomNumber + ".docx").toString()); // reading the file
 			// generated from
 			// fileOutputStream
 
 		} else {
-			FileOutputStream fileOutputStream = new FileOutputStream("GeneratedDoc_" + randomNumber + ".pdf"); // Temp
-																												// location
+			FileOutputStream fileOutputStream = new FileOutputStream(mailSubject + randomNumber + ".pdf"); // Temp
+																											// location
 			PdfOptions options = PdfOptions.create().fontEncoding("windows-1250");
 			PdfConverter.getInstance().convert(doc, fileOutputStream, options);
-			file = new File(Paths.get("GeneratedDoc_" + randomNumber + ".pdf").toString());
+			file = new File(Paths.get(mailSubject + randomNumber + ".pdf").toString());
 		}
 
 		MimeBodyPart attachmentPart = new MimeBodyPart();
@@ -3812,7 +3873,7 @@ public class DocGen {
 		Multipart multipart = new MimeMultipart();
 
 		attachmentPart.attachFile(file);
-		textPart.setText("This is text");
+		textPart.setText(mailBody);
 		multipart.addBodyPart(textPart);
 		multipart.addBodyPart(attachmentPart);
 		message.setContent(multipart);

@@ -53,4 +53,12 @@ public class DocTemplateDetailsServiceImp implements DocTemplateDetailsService {
 		List<DocTemplateDetails> items = query.getResultList();
 		return items;
 	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<DocTemplateDetails> findById(String id) {
+		Query query = em.createNamedQuery("DocTemplateDetails.findById").setParameter("docTemplateId", id);
+		List<DocTemplateDetails> items = query.getResultList();
+		return items;
+	}
 }
