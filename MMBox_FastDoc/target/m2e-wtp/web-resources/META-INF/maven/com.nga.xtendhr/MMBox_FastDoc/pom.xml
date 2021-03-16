@@ -37,11 +37,11 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk16 -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk16</artifactId>
 			<version>1.46</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>eclipselink</artifactId>
@@ -117,9 +117,33 @@
 		
 		<!-- Dependency for sending mails -->
 		<dependency>
-		<groupId>com.sun.mail</groupId>
-		<artifactId>javax.mail</artifactId>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
 		</dependency>
+		<!-- DocuSign Dependency -->
+		<dependency>
+            <groupId>com.docusign</groupId>
+            <artifactId>docusign-esign-java</artifactId>
+            <version>3.2.0</version>
+            <!-- <exclusions>
+		    	 <exclusion>
+		    	 	<groupId>org.bouncycastle</groupId>
+				    <artifactId>bcprov-jdk15on</artifactId> 
+		    	 </exclusion>
+		    </exclusions> -->
+        </dependency>    
+        <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-common -->
+		<dependency>
+		    <groupId>org.glassfish.jersey.core</groupId>
+		    <artifactId>jersey-common</artifactId>
+		    <version>2.28</version>
+		</dependency>		
+		<!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
+		<dependency>
+		    <groupId>javax.ws.rs</groupId>
+		    <artifactId>javax.ws.rs-api</artifactId>
+		    <version>2.1-m01</version>
+		</dependency>        
 	</dependencies>
 
 	<properties>
