@@ -743,7 +743,7 @@ public class DocGen {
 			session.setAttribute("loggedInUser", loggedInUser);
 			JSONObject response = new JSONObject();
 			response.put("login", "success");
-			response.put("userId", loggedInUser);
+			response.put("userId", loggedInUser); 
 
 			if (CommonFunctions.checkIfAdmin(loggedInUser)) {
 				session.setAttribute("adminLoginStatus", "Success");
