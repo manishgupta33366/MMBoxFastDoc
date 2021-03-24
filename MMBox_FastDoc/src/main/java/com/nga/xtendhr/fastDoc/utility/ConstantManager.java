@@ -12,6 +12,14 @@ public class ConstantManager {
 	public static final String basePackage = "com.nga.xtendhr";
 
 	public static final String genAPI = "/api";
+	
+	public static final String uploadAPI = "/attachment";
+	
+	public static final String uploadAttachmentModule = "EMPLOYEE_FILE";  // EMPLOYEE_FILE  EMPLOYEE_PROFILE
+	
+	public static final String uploadAttachmentModuleCategory = "HRIS_ATTACHMENT"; //HRIS_ATTACHMENT
+	
+	public static final String adminUserTemplateGroupId = "G42";
 
 	public static final String genError = "/error";
 

@@ -114,12 +114,12 @@ public class DestinationClient {
 		URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(),
 				url.getQuery(), url.getRef());
 		urlString = uri.toASCIIString();
-		logger.debug("urlString" + urlString);
+		logger.debug("urlString: " + urlString);
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost request = new HttpPost(urlString);
 
 		StringEntity entity = new StringEntity(postJson, "UTF-8");
-		logger.debug("postJson" + postJson);
+		logger.debug("postJson: " + postJson);
 		request.setEntity(entity);
 		request.setHeader("Accept", "application/json");
 		request.setHeader("Content-type", "application/json");
@@ -145,8 +145,8 @@ public class DestinationClient {
 		HttpResponse response;
 		try {
 			response = httpClient.execute(request);
-			logger.debug("responseJson" + response);
-			logger.debug("Post urlString" + urlString + "responseJson " + response);
+			logger.debug("responseJson: " + response);
+			logger.debug("Post urlString: " + urlString + " responseJson " + response);
 
 			return response;
 		} catch (ClientProtocolException e) {

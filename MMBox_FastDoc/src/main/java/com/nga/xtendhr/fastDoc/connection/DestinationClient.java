@@ -110,7 +110,7 @@ public class DestinationClient {
 		}
 		HttpResponse response = httpClient.execute(request);
 //		String responseJson = EntityUtils.toString(response.getEntity(), "UTF-8");
-		logger.debug("responseJson" + response);
+		logger.debug("responseJson " + response);
 		logger.debug("Get urlString" + urlString + "responseJson " + response);
 		return response;
 	}

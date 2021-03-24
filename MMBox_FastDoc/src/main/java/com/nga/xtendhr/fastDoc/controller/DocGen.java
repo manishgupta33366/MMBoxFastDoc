@@ -117,6 +117,7 @@ import com.nga.xtendhr.fastDoc.service.TemplateTestService;
 import com.nga.xtendhr.fastDoc.service.TextService;
 import com.nga.xtendhr.fastDoc.utility.CommonFunctions;
 import com.nga.xtendhr.fastDoc.utility.CommonVariables;
+import com.nga.xtendhr.fastDoc.utility.ConstantManager;
 
 /*
  * AppName: DocGen
@@ -353,7 +354,7 @@ public class DocGen {
 	@RequestMapping(value = "/uploadDocTemplate", method = RequestMethod.POST) // new/efficient code to upload template
 	public ResponseEntity<?> uploadDocTemplate(@RequestParam(name = "templateName") String templateName,
 			@RequestParam(name = "templateDescription") String templateDescription,
-			@RequestParam(name = "groupId") String groupId, @RequestParam("file") MultipartFile multipartFile,
+			@RequestParam(name = "groupId") String groupId, @RequestParam("file") MultipartFile multipartFile, HttpServletRequest request, 
 			HttpSession session) throws IOException {
 		try {
 
@@ -394,7 +395,26 @@ public class DocGen {
 
 			// Mapping Group to Template
 			MapGroupTemplates mapGroupTemplates = new MapGroupTemplates();
-			mapGroupTemplates.setGroupID(groupId);
+			
+			HttpSession session1 = request.getSession(false);
+			String loggedInUser = request.getUserPrincipal().getName();
+			session1 = request.getSession(true);
+			session1.setAttribute("loginStatus", "Success");
+			session1.setAttribute("loggedInUser", loggedInUser);	
+			
+			logger.debug("LoggedInUser: " + loggedInUser);
+
+			if (CommonFunctions.checkIfAdmin(loggedInUser)) {
+				logger.debug("AdminUser: " + loggedInUser);
+				session1.setAttribute("adminLoginStatus", "Success");
+				/* Add the Admin User Template Group */
+				mapGroupTemplates.setGroupID(ConstantManager.adminUserTemplateGroupId);
+			}
+			else{
+				mapGroupTemplates.setGroupID(groupId);
+			}			
+			
+			
 			mapGroupTemplates.setTemplateID(templateId);
 			mapGroupTemplateService.create(mapGroupTemplates);
 

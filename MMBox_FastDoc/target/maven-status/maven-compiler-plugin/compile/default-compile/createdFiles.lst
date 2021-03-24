@@ -86,6 +86,7 @@ com\nga\xtendhr\fastDoc\controller\DocGen.class
 com\nga\xtendhr\fastDoc\service\MapTemplatFieldsServiceImp.class
 com\nga\xtendhr\fastDoc\docusign\DSHelper.class
 com\nga\xtendhr\fastDoc\controller\DocGen$hunLocale.class
+com\nga\xtendhr\fastDoc\controller\AttachmentController.class
 com\nga\xtendhr\fastDoc\service\RulesService.class
 com\nga\xtendhr\fastDoc\utility\ConstantManager.class
 com\nga\xtendhr\fastDoc\service\CodelistTextServiceImp.class
